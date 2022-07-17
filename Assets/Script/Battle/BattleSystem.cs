@@ -19,42 +19,45 @@ public enum BattleState
 }
 public class BattleSystem : MonoBehaviour
 {
-
     public BattleState state;
-    public GameObject playerPrefab;
-    public GameObject enemyPrefab;
+    //public GameObject playerPrefab;
+    //public GameObject enemyPrefab;
+    public GameObject skillPanel;
+    public GameObject card;
 
-    public Transform playerBattleStation;
-    public Transform enemyBattleStation;
+    //public Transform playerBattleStation;
+    //public Transform enemyBattleStation;
     
     Unit playerUnit, enemyUnit;
-    public Text dialogueText;
+    public TMPro.TMP_Text dialogueText;
 
     public BattleHUD playerHUD;
     public BattleHUD enemyHUD;
-    public CardHUD cardHUD;
+
+    public bool isEven=false;//偶数回合
 
     string cardName;
     //开始默认为玩家回合
     void Start()
     {
+        playerUnit = Generated.playerUnit;
+        enemyUnit = Generated.enemyUnit;
         state = BattleState.START;
         StartCoroutine(SetupBattle());
+        playerUnit.maxDamage = playerUnit.damage;
     }
-
     
     IEnumerator SetupBattle()
     {
-        GameObject playerGo = Instantiate(playerPrefab, playerBattleStation);
-        playerUnit = playerGo.GetComponent<Unit>();
-        GameObject enemyGo = Instantiate(enemyPrefab, enemyBattleStation);
-        enemyUnit = enemyGo.GetComponent<Unit>();
+        //GameObject playerGo = Instantiate(playerPrefab, playerBattleStation);//位置
+        //playerUnit = playerGo.GetComponent<Unit>();
+        //GameObject enemyGo = Instantiate(enemyPrefab, enemyBattleStation);//位置
+        //enemyUnit = enemyGo.GetComponent<Unit>();
 
         dialogueText.text = "A wild" + enemyUnit.unitName;
         playerHUD.SetHUD(playerUnit);
         enemyHUD.SetHUD(enemyUnit);
 
-        ThrowDice();
         yield return new WaitForSeconds(2f);
         state = BattleState.PLAYERTURN;
         PlayerTurn();
@@ -68,13 +71,16 @@ public class BattleSystem : MonoBehaviour
         }
         if (state == BattleState.PLAYERTURN)
         {
+            CardController.Ins.SubCool();
             if (playerUnit.isLuck)
             {
                 playerUnit.diceCount = 6;
                 playerUnit.isLuck = false;
                 return;
             }
-            else playerUnit.diceCount = (int)Random.Range(1, 7);
+            else if (!playerUnit.isFreshman)
+                playerUnit.diceCount = (int)Random.Range(1, 1);
+            else playerUnit.diceCount = (int)Random.Range(6, 6);
         }
         else if (state == BattleState.ENEMYTURN)
         {
@@ -84,22 +90,25 @@ public class BattleSystem : MonoBehaviour
                 enemyUnit.isControl = false;
                 return;
             }
-            else enemyUnit.diceCount= (int)Random.Range(1, 7);
+            else if ((int)Random.Range(0, 100) < 80)
+                enemyUnit.diceCount = (int)Random.Range(4, 7);
+            else if ((int)Random.Range(0, 100) > 90)
+                enemyUnit.diceCount = (int)Random.Range(3, 7);
+            else enemyUnit.diceCount = (int)Random.Range(1, 7);
         }
     }
     void PlayerTurn()
     {
+        ThrowDice();
         dialogueText.text = "Choose an action";
     }
 
-    public void OnCardButton()
+    //返回技能面板
+    public void OnBackButton()
     {
-        //判断点击的是哪张卡（待补全）
-        //cardName=
-        CardManagement.UseCard(playerUnit, enemyUnit, cardName);
-        playerHUD.SetHP(playerUnit.currentHP);
-        enemyHUD.SetHP(enemyUnit.currentHP);
-        PlayerEndOfTurn();
+        skillPanel.SetActive(true);
+        card.SetActive(false);
+        //CardController.Ins.Display();
     }
     //逃离战斗（待补全）
     public void OnEscapeButton()
@@ -108,20 +117,13 @@ public class BattleSystem : MonoBehaviour
 
     }
 
-    //public void OnHealButton()
-    //{
-    //    if (state != BattleState.PLAYERTURN)
-    //        return;
-    //    StartCoroutine(PlayerHeal());
-    //}
-
     IEnumerator PlayerAttack(int force)
     {
         if (!playerUnit.isEnchantment)
-            force = (int)(force * (60 + 20 * (playerUnit.diceCount - 1)));
+            force = force * 1;
         else
         {
-            force = (int)(force * (60 + 20 * (playerUnit.diceCount - 1)) + (int)enemyUnit.maxHP * 0.2);
+            force = (int)(force  + enemyUnit.maxHP * 0.2);
             playerUnit.isEnchantment = false;
         }
         //攻击敌人
@@ -134,6 +136,7 @@ public class BattleSystem : MonoBehaviour
         {
             //战斗结束
             state = BattleState.WON;
+            GameManager.Ins.playerStats.characterData.currentLevel++;
             EndBattle();
         }
         else PlayerEndOfTurn();
@@ -141,9 +144,16 @@ public class BattleSystem : MonoBehaviour
 
     public void PlayerEndOfTurn()
     {
+        bool isDead = false;
         if (playerUnit.isPoisoned)
         {
-
+            isDead= playerUnit.TakeDamage((int)(0.2 * playerUnit.maxHP));
+        }
+        if (isDead)
+        {
+            //战斗结束
+            state = BattleState.LOST;
+            EndBattle();
         }
         if (!playerUnit.isBatter)
         {
@@ -162,22 +172,51 @@ public class BattleSystem : MonoBehaviour
 
     IEnumerator EnemyTurn()
     {
-        bool isDead;
+        ThrowDice();
+        bool isDead = false ;
         //添加敌人AI(待修改）
         dialogueText.text = enemyUnit.unitName + "attacks!";
-        yield return new WaitForSeconds(1f);
-        if (enemyUnit.reducesCount <= 0)
+        if (enemyUnit.reducesCount > 0)
         {
-            isDead = playerUnit.TakeDamage(enemyUnit.damage * (60 + 20 * (enemyUnit.diceCount - 1)));
+            if (!enemyUnit.isRedueces)
+            {
+                enemyUnit.damage = (int)(0.8 * enemyUnit.damage);
+                enemyUnit.isRedueces = true;
+            }
+            enemyUnit.reducesCount--;
+            if (enemyUnit.reducesCount <= 0)
+            {
+                enemyUnit.damage = (int)(1.25 * enemyUnit.damage);
+                enemyUnit.isRedueces = false;
+            }
+        }
+        if (enemyUnit.diceCount == 1)
+        {
+            if (!enemyUnit.isBoss||!isEven)
+            {
+                isDead = playerUnit.TakeDamage((int)(enemyUnit.damage * 0.5 * enemyUnit.diceCount));
+                if (playerUnit.isBack)
+                    enemyUnit.TakeDamage((int)(enemyUnit.damage * 0.5 * enemyUnit.diceCount));
+            }
+            else playerUnit.isPoisoned = true;
         }
         else
         {
-            isDead = playerUnit.TakeDamage((int)0.5*enemyUnit.damage * (60 + 20 * (enemyUnit.diceCount - 1)));
-            enemyUnit.reducesCount--;
+            if (!enemyUnit.isBoss || !isEven)
+            {
+                isDead = playerUnit.TakeDamage((int)(enemyUnit.damage * (0.2 * (enemyUnit.diceCount + 1))));
+                if (playerUnit.isBack)
+                    enemyUnit.TakeDamage((int)(enemyUnit.damage * (0.2 * (enemyUnit.diceCount + 1))));
+            }
+            else
+            {
+                playerUnit.isRedueces = true;
+                playerUnit.damage = (1 - (int)(0.1 * (enemyUnit.diceCount - 1))) * playerUnit.damage;
+            }
         }
-            playerHUD.SetHP(playerUnit.currentHP);
+        playerHUD.SetHP(playerUnit.currentHP);
         yield return new WaitForSeconds(1f);
-
+        playerUnit.isBack = false;
         if (isDead)
         {
             state = BattleState.LOST;
@@ -196,10 +235,12 @@ public class BattleSystem : MonoBehaviour
         if (state == BattleState.WON)
         {
             dialogueText.text = "Won!";
+
         }
         else if (state == BattleState.LOST)
         {
             dialogueText.text = "Defeated!";
+
         }
     }
 
@@ -211,9 +252,7 @@ public class BattleSystem : MonoBehaviour
     {
         if (playerUnit.isFreshman)
             StartCoroutine(PlayerAttack(999 * playerUnit.damage));
-        //enemyUnit.currentHP -= 999 * playerUnit.damage;
         else StartCoroutine(PlayerAttack(1 * playerUnit.damage)); 
-        //enemyUnit.currentHP -= 1;
         
     }
     /// <summary>
@@ -226,6 +265,7 @@ public class BattleSystem : MonoBehaviour
             if (Random.Range(0, 100) < 99)
             {
                 playerUnit.isPoisoned = false;
+                playerUnit.damage = playerUnit.maxDamage;
             }
         }
         else dialogueText.text = "Failed!";
@@ -236,22 +276,20 @@ public class BattleSystem : MonoBehaviour
     /// </summary>
     public void OnDamageButton()
     {
-        if (Random.Range(0, 100) < 50)
+        if (Random.Range(0, 100) < 10)
         {
             dialogueText.text = "Miss!";
             PlayerEndOfTurn();
         }
         //enemyUnit.currentHP -= 15 * playerUnit.damage;
-        else StartCoroutine(PlayerAttack(15 * playerUnit.damage));
+        else StartCoroutine(PlayerAttack(10+7 * playerUnit.damage));
     }
     /// <summary>
     /// 减益技能
     /// </summary>
     public void OnReducesDown()
     {
-        if (Random.Range(0, 100) < 75)
-            enemyUnit.reducesCount = 2;
-        else dialogueText.text = "Miss!";
+        enemyUnit.reducesCount = 2;
         PlayerEndOfTurn();
     }
 }

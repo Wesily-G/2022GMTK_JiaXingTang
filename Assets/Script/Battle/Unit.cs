@@ -9,6 +9,7 @@ public class Unit : MonoBehaviour
 
     //…À∫¶÷µ
     public int damage;
+    public int maxDamage;
 
     public int maxHP;
     public int currentHP;
@@ -20,6 +21,9 @@ public class Unit : MonoBehaviour
     public bool isLuck;
     public bool isFreshman;
     public bool isPoisoned;
+    public bool isRedueces;
+    public bool isBack;
+    public bool isBoss;
     public int reducesCount;
 
 
@@ -32,6 +36,8 @@ public class Unit : MonoBehaviour
             return true;
         else return false;
     }
+
+
 
     public void Heal(int amount)
     {

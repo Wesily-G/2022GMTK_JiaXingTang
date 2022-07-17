@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2753963172846004066
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2753963172846004064}
+  - component: {fileID: 2753963172846004067}
+  m_Layer: 0
+  m_Name: CardController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2753963172846004064
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2753963172846004066}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 5.1961527, y: 5.1961527, z: 5.1961527}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2753963172846004067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2753963172846004066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11b10db455e078747952174866f50f70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  data:
+  - isFind: 1
+    cardID: 1
+    cardName: "\u8FDE\u51FB"
+    cardDes: "\u51B7\u5374\u4E09\u56DE\u5408\uFF0C\u4E0B\u56DE\u5408\u8FD8\u662F\u4F60\u7684\u56DE\u5408"
+    cardPrefab: {fileID: 8247692462895865999, guid: 2a16b98fec4a21746a3c35265bdd51eb, type: 3}
+    effectNum: 1
+    effect: 0
+    coolTime: 3
+    coolRemain: 0
+  - isFind: 1
+    cardID: 2
+    cardName: "\u5B64\u6CE8\u4E00\u63B7"
+    cardDes: "\u51B7\u5374\u4E94\u56DE\u5408\uFF0C\u53CC\u65B9\u8840\u91CF\u53D8\u4E3A1"
+    cardPrefab: {fileID: 6290336402420131205, guid: cb3e37a8f87debe44977e077dc2e28f0, type: 3}
+    effectNum: 1
+    effect: 1
+    coolTime: 5
+    coolRemain: 0
+  playerHUD: {fileID: 0}
+  enemyHUD: {fileID: 0}

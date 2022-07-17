@@ -7,8 +7,8 @@ using UnityEngine.UI;
 /// </summary>
 public class BattleHUD : MonoBehaviour
 {
-    public Text nameText;
-    public Text levelText;
+    public TMPro.TMP_Text nameText;
+    public TMPro.TMP_Text levelText;
     public Slider hpSlider;
 
     public void SetHUD(Unit unit)
